@@ -13,6 +13,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 //LEGIC packages
+import com.legic.mobile.sdk.api.types.LegicNeonFile;
+import com.legic.mobile.sdk.api.types.LegicNeonFileDefaultMode;
 import com.legic.mobile.sdk.api.LegicMobileSdkManager;
 import com.legic.mobile.sdk.api.LegicMobileSdkManagerFactory;
 import com.legic.mobile.sdk.api.exception.LegicMobileSdkException;
@@ -32,7 +34,9 @@ import com.legic.mobile.sdk.api.types.RfInterfaceState;
 import com.legic.mobile.sdk.api.types.LcConfirmationMethod;
 import com.legic.mobile.sdk.api.types.LegicMobileSdkPushType;
 
-public class ToastyPlugin extends CordovaPlugin implements LegicMobileSdkRegistrationEventListener, LegicMobileSdkSynchronizeEventListener {
+public class ToastyPlugin extends CordovaPlugin implements 
+LegicMobileSdkRegistrationEventListener, 
+LegicMobileSdkSynchronizeEventListener {
   private LegicMobileSdkManager mManager;
   private CallbackContext currentContext;
 
@@ -41,8 +45,6 @@ public class ToastyPlugin extends CordovaPlugin implements LegicMobileSdkRegistr
   public void initialize() {      
       try {
         mManager = LegicMobileSdkManagerFactory.getInstance(cordova.getActivity().getApplicationContext());
-
-        //registerListeners();
   
         if (!mManager.isStarted()) {
             mManager.start(50122131, 
@@ -160,12 +162,63 @@ public class ToastyPlugin extends CordovaPlugin implements LegicMobileSdkRegistr
       mManager.synchronizeWithBackend();
       return true;
     } else if (action.equals("get_files")) {
+      try {
+          List<LegicNeonFile> files = mManager.getAllFiles();
+          int fileIndex = 1;
 
-      callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK));
+          for (LegicNeonFile f : files) {
+              String fileInfos = "Index: " + fileIndex++;
+              fileInfos += "\nState: " + f.getFileState().toString();
+
+              byte[] fileId = f.getFileId();
+              if (fileId.length > 0) {
+                  fileInfos += "\nFile Id: " +  this.dataToByteString(f.getFileId());
+                  for (String key : f.getMetaData().keySet()) {
+                      fileInfos += "\n" + key + ": " + f.getMetaData().get(key).getStringValue();
+                  }
+              }
+              this.showToast(fileInfos);
+          }
+          callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK));
+      } catch (LegicMobileSdkException e) {
+        callbackContext.error(e.getLocalizedMessage());
+        this.showToast("ERROR: " + e.getLocalizedMessage());
+      }
+      this.currentContext = null;
       return true;
     } else if (action.equals("get_card")) {
-      
-      callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK));
+      int index;
+      try {
+        JSONObject options = args.getJSONObject(0);
+        index = options.getInt("index");
+      } catch (JSONException e) {
+        callbackContext.error("Error encountered: " + e.getMessage());
+        return false;
+      }
+      if (index > 0) {
+          try {
+              List<LegicNeonFile> files = mManager.getAllFiles();
+
+              if (index <= files.size()) {
+                  LegicNeonFile f = files.get(index-1);
+                  this.showToast("file Id " + this.dataToByteString(f.getFileId()));
+                  try {
+                      mManager.activateFile(f);
+                      mManager.setDefault(f, LegicNeonFileDefaultMode.LC_PROJECT_DEFAULT,true);
+                      callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK));
+                  } catch (LegicMobileSdkException e) {
+                      callbackContext.error(e.getLocalizedMessage());
+                  }
+              } else {
+                callbackContext.error("File referenced by index does not exist");
+              }
+          } catch (LegicMobileSdkException e) {
+              callbackContext.error(e.getLocalizedMessage());
+          }
+      } else {
+          callbackContext.error("Please use file Index > 0");
+      }
+      this.currentContext = null;
       return true;
     } else {
       callbackContext.error("\"" + action + "\" is not a recognized action.");
@@ -200,10 +253,21 @@ public class ToastyPlugin extends CordovaPlugin implements LegicMobileSdkRegistr
       return true;*/
   }
 
+  public String dataToByteString(byte[] data) {
+    if(data == null)  { return ""; }
+    StringBuilder outputString = new StringBuilder();
+    for(byte b : data)
+    {
+        outputString.append(String.format("%02X", b));
+    }
+    return outputString.toString();
+}
+
   public void handleSdkError(LegicMobileSdkStatus status) {
     if (!status.isSuccess() && this.currentContext != null) {
       // LegicMobileSdkErrorReason gives more insight about the cause
       LegicMobileSdkErrorReason reason = status.getReason();
+      this.showToast(status.getError().name());
       this.currentContext.error(status.getError().name());
       this.currentContext = null;
       /*log("An action failed with the following error: " + status.getError().name());

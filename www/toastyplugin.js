@@ -1,18 +1,26 @@
 // Empty constructor
 function ToastyPlugin() {}
 
-// The function that passes work along to native shells
-// Message is a string, duration may be 'long' or 'short'
-ToastyPlugin.prototype.show = function(message, duration, successCallback, errorCallback) {
-  let options = {};
-  options.message = message;
-  options.duration = duration;
-  cordova.exec(successCallback, errorCallback, 'ToastyPlugin', 'show', [options]);
-};
-
 ToastyPlugin.prototype.initialize = function(successCallback, errorCallback) {
   cordova.exec(successCallback, errorCallback, 'ToastyPlugin', 'initialize', []);
 };
+
+ToastyPlugin.prototype.load = function(successCallback, errorCallback) {
+  let _self = this;
+  _self.initialize(function() {
+    _self.synchronize(function() {
+      _self.getFiles(function() {
+        successCallback();
+      }, function(err) {
+        errorCallback(err);
+      });
+    }, function(err) {
+      errorCallback(err);
+    });
+  }, function(err) {
+    errorCallback(err);
+  });
+}
 
 ToastyPlugin.prototype.startRegistration = function(deviceId, successCallback, errorCallback) {
   let options = {
@@ -28,12 +36,44 @@ ToastyPlugin.prototype.finishRegistration = function(deviceToken, successCallbac
   cordova.exec(successCallback, errorCallback, 'ToastyPlugin', 'finish_registration', [options]);
 };
 
+ToastyPlugin.prototype.register = function(deviceId, deviceToken, successCallback, errorCallback) {
+  let _self = this;
+  _self.startRegistration(deviceId, function() {
+    _self.finishRegistration(deviceToken, function() {
+      _self.synchronize(function() {
+        _self.getFiles(function() {
+          successCallback();
+        }, function(err) {
+          errorCallback(err);
+        });
+      }, function(err) {
+        errorCallback(err);
+      })
+    }, function(err) {
+      errorCallback(err);
+    })
+  }, function(err) {
+    errorCallback(err);
+  });
+};
+
 ToastyPlugin.prototype.synchronize = function(successCallback, errorCallback) {
-  cordova.exec(successCallback, errorCallback, 'ToastyPlugin', 'synchronize', [options]);
+  cordova.exec(successCallback, errorCallback, 'ToastyPlugin', 'synchronize', []);
+};
+
+ToastyPlugin.prototype.getFiles = function(successCallback, errorCallback) {
+  cordova.exec(successCallback, errorCallback, 'ToastyPlugin', 'get_files', []);
+};
+
+ToastyPlugin.prototype.getCard = function(index, successCallback, errorCallback) {
+  let options = {
+    index: index
+  };
+  cordova.exec(successCallback, errorCallback, 'ToastyPlugin', 'get_card', [options]);
 };
 
 ToastyPlugin.prototype.unregister = function(successCallback, errorCallback) {
-  cordova.exec(successCallback, errorCallback, 'ToastyPlugin', 'unregister', [options]);
+  cordova.exec(successCallback, errorCallback, 'ToastyPlugin', 'unregister', []);
 };
 
 // Installation constructor that binds ToastyPlugin to window
