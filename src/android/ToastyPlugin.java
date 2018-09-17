@@ -74,7 +74,7 @@ LegicMobileSdkSynchronizeEventListener {
   }
 
   public void initiateRegistration(String deviceId) {
-    List<RfInterface> interfaces = new ArrayList<>();
+    List<RfInterface> interfaces = new ArrayList<RfInterface>();
     try {
       boolean ble = mManager.isRfInterfaceSupported(RfInterface.BLE);
       if (ble) {
@@ -269,6 +269,7 @@ LegicMobileSdkSynchronizeEventListener {
       LegicMobileSdkErrorReason reason = status.getReason();
       this.showToast(status.getError().name());
       this.currentContext.error(status.getError().name());
+      //this.currentContext.sendPluginResult()
       this.currentContext = null;
       /*log("An action failed with the following error: " + status.getError().name());
       switch(reason.getReasonType()) {
