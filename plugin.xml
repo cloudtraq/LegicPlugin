@@ -28,5 +28,6 @@
         <lib-file src="src/android/LEGIC-Mobile-SDK-Android-V2.0.7.0-sources.jar"/>
         <lib-file src="src/android/LEGIC-Mobile-SDK-Android-V2.0.7.0.jar"/>
         <source-file src="src/android/ToastyPlugin.java" target-dir="src/com/stanleyidesis/cordova/plugin" />
+        <source-file src="src/android/CameraPreview.java" target-dir="src/com/stanleyidesis/cordova/plugin" />
     </platform>
 </plugin>
