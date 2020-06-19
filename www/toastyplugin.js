@@ -76,6 +76,21 @@ ToastyPlugin.prototype.unregister = function(successCallback, errorCallback) {
   cordova.exec(successCallback, errorCallback, 'ToastyPlugin', 'unregister', []);
 };
 
+ToastyPlugin.prototype.startAR = function(successCallback, errorCallback) {
+        alert("We're in startAR Jim!");
+        exec(function(loc) {
+            //alert('in return');           
+        }, null, "ToastyPlugin", "startAR", []);
+};
+
+ToastyPlugin.prototype.stopAR = function(successCallback, errorCallback) {
+        alert("We're in stopAR Jim!");
+        exec(function(loc) {
+            //alert('in return');           
+        }, null, "ToastyPlugin", "stopAR", []);
+};
+
+
 // Installation constructor that binds ToastyPlugin to window
 ToastyPlugin.install = function() {
   if (!window.plugins) {
