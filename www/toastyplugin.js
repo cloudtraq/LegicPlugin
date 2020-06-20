@@ -78,14 +78,14 @@ ToastyPlugin.prototype.unregister = function(successCallback, errorCallback) {
 
 ToastyPlugin.prototype.startAR = function(successCallback, errorCallback) {
         alert("We're in startAR Jim!");
-        exec(function(loc) {
+        cordova.exec(function(loc) {
             //alert('in return');           
         }, null, "ToastyPlugin", "startAR", []);
 };
 
 ToastyPlugin.prototype.stopAR = function(successCallback, errorCallback) {
         alert("We're in stopAR Jim!");
-        exec(function(loc) {
+        cordova.exec(function(loc) {
             //alert('in return');           
         }, null, "ToastyPlugin", "stopAR", []);
 };
